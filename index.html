@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <title>EasyMoney</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <script>
+      // Prevent sandboxed iframe crashes due to fetch overwrite attempts from polyfills/libraries
+      (function() {
+        try {
+          if (typeof window !== 'undefined') {
+            // 1. Ensure FormData has prototype properties of ES6 map/iterator interface
+            // This prevents formdata-polyfill (imported by node-fetch) from registering itself
+            if (typeof FormData !== 'undefined') {
+              if (!FormData.prototype.keys) {
+                FormData.prototype.keys = function() {
+                  var arr = [];
+                  return arr.keys();
+                };
+              }
+              if (!FormData.prototype.values) {
+                FormData.prototype.values = function() {
+                  var arr = [];
+                  return arr.values();
+                };
+              }
+              if (!FormData.prototype.entries) {
+                FormData.prototype.entries = function() {
+                  var arr = [];
+                  return arr.entries();
+                };
+              }
+              if (!FormData.prototype[Symbol.iterator]) {
+                FormData.prototype[Symbol.iterator] = function() {
+                  var arr = [];
+                  return arr.entries();
+                };
+              }
+            }
+
+            // 2. Preemptively attempt to make fetch writable or ignore setting if target is getter-only
+            var originalFetch = window.fetch;
+            if (originalFetch) {
+              try {
+                Object.defineProperty(window, 'fetch', {
+                  get: function() { return originalFetch; },
+                  set: function(val) { console.warn('Interception of global window.fetch modification ignored.'); },
+                  configurable: true
+                });
+              } catch (e) {
+                // If read-only getter-only and non-configurable, we catch gracefully
+              }
+              try {
+                Object.defineProperty(globalThis, 'fetch', {
+                  get: function() { return originalFetch; },
+                  set: function(val) { console.warn('Interception of global globalThis.fetch modification ignored.'); },
+                  configurable: true
+                });
+              } catch (e2) {
+                // Ignore gracefully
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('Sandbox protection initialization skipped:', err);
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
