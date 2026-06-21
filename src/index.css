@@ -33,14 +33,8 @@ body {
 }
 
 .app-header {
-  padding-top: calc(8px + env(safe-area-inset-top));
-  min-height: calc(60px + env(safe-area-inset-top));
-}
-
-@media (display-mode: standalone) {
-  .app-header {
-    padding-top: calc(10px + env(safe-area-inset-top));
-  }
+  padding-top: max(12px, env(safe-area-inset-top));
+  padding-bottom: 12px;
 }
 
 .date-picker-wrapper,

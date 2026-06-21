@@ -941,7 +941,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Header */}
-      <header className="app-header w-full flex-none flex items-center justify-between px-6 pb-4 bg-white border-b border-[#E8EEE9] shadow-sm z-30">
+      <header className="app-header w-full flex-none flex items-center justify-between px-6 bg-white border-b border-[#E8EEE9] shadow-sm z-30">
         <button onClick={() => setActiveTab('dashboard')} className="flex items-center gap-2 outline-none hover:opacity-80 transition-opacity">
           <img src={config.appLogoUrl || "/easymoney-logo.png"} alt="Logo" className="w-10 h-10 object-contain" />
           <h1 className="text-xl font-bold tracking-tight text-emerald-900">{config.appName || 'EasyMoney'}</h1>
@@ -960,7 +960,7 @@ export default function App() {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden w-full pt-safe pb-[calc(88px+env(safe-area-inset-bottom))]">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden w-full pt-safe pb-[calc(64px+env(safe-area-inset-bottom))]">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={activeTab}
@@ -985,18 +985,21 @@ export default function App() {
       </main>
 
       {/* Bottom Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 w-full md:max-w-xl lg:max-w-3xl xl:max-w-4xl sm:mx-auto bg-white/70 backdrop-blur-2xl border-t border-[#E8EEE9]/60 pb-[calc(4px+env(safe-area-inset-bottom))] z-40 shadow-[0_-8px_30px_rgba(0,0,0,0.05)]">
-        <div className="flex justify-around items-center h-[68px] px-2">
+      <nav 
+        className="fixed bottom-0 left-0 right-0 w-full md:max-w-xl lg:max-w-3xl xl:max-w-4xl sm:mx-auto bg-white/70 backdrop-blur-2xl border-t border-[#E8EEE9]/60 z-40 shadow-[0_-8px_30px_rgba(0,0,0,0.05)]"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        <div className="flex justify-around items-center h-[56px] px-2">
           <NavItem icon="pie_chart" label={t("សរុប", config.language)} isActive={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
           <NavItem icon="list_alt" label={t("បញ្ជី", config.language)} isActive={activeTab === 'records'} onClick={() => setActiveTab('records')} />
           
-          <div className="flex-1 flex justify-center -mt-6">
+          <div className="flex-1 flex justify-center -mt-5">
             <button 
               onClick={() => { setEditRecord(null); setActiveTab('add'); }} 
-              className="group relative flex items-center justify-center outline-none active:scale-95 transition-all duration-300 drop-shadow-[0_8px_20px_rgba(16,185,129,0.3)] hover:drop-shadow-[0_12px_24px_rgba(16,185,129,0.4)]"
+              className="group relative flex items-center justify-center outline-none active:scale-95 transition-all duration-300 drop-shadow-[0_4px_16px_rgba(16,185,129,0.3)] hover:drop-shadow-[0_8px_20px_rgba(16,185,129,0.4)]"
             >
-              <div className="relative w-[60px] h-[60px] bg-gradient-to-tr from-emerald-500 to-teal-600 group-hover:from-emerald-400 group-hover:to-teal-500 text-white rounded-[22px] rotate-3 group-hover:rotate-6 flex items-center justify-center border-4 border-white z-10 transition-all duration-300">
-                <span className="material-symbols-rounded text-4xl -rotate-3 group-hover:-rotate-6 transition-all">add</span>
+              <div className="relative w-[50px] h-[50px] bg-gradient-to-tr from-emerald-500 to-teal-600 group-hover:from-emerald-400 group-hover:to-teal-500 text-white rounded-[20px] rotate-3 group-hover:rotate-6 flex items-center justify-center border-4 border-white z-10 transition-all duration-300">
+                <span className="material-symbols-rounded text-3xl -rotate-3 group-hover:-rotate-6 transition-all">add</span>
               </div>
             </button>
           </div>
