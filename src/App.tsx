@@ -960,7 +960,7 @@ export default function App() {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden w-full pt-safe pb-[calc(80px+env(safe-area-inset-bottom))]">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden w-full pt-safe pb-[calc(76px+env(safe-area-inset-bottom)*0.4)]">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={activeTab}
@@ -986,9 +986,10 @@ export default function App() {
 
       {/* Bottom Nav */}
       <nav 
-        className="fixed bottom-0 left-0 right-0 w-full md:max-w-xl lg:max-w-3xl xl:max-w-4xl sm:mx-auto bg-white/70 backdrop-blur-2xl border-t border-[#E8EEE9]/60 z-40 shadow-[0_-8px_30px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]"
+        className="fixed bottom-0 left-0 right-0 w-full md:max-w-xl lg:max-w-3xl xl:max-w-4xl sm:mx-auto bg-white/70 backdrop-blur-2xl border-t border-[#E8EEE9]/60 z-40 shadow-[0_-8px_30px_rgba(0,0,0,0.05)]"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) * 0.4)' }}
       >
-        <div className="flex justify-around items-center h-[50px] px-2">
+        <div className="flex justify-around items-center h-[60px] px-2">
           <NavItem icon="pie_chart" label={t("សរុប", config.language)} isActive={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
           <NavItem icon="list_alt" label={t("បញ្ជី", config.language)} isActive={activeTab === 'records'} onClick={() => setActiveTab('records')} />
           
