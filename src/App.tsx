@@ -986,9 +986,9 @@ export default function App() {
 
       {/* Bottom Nav */}
       <nav 
-        className="bottom-nav fixed bottom-0 left-0 right-0 w-full md:max-w-xl lg:max-w-3xl xl:max-w-4xl sm:mx-auto bg-white/70 backdrop-blur-2xl border-t border-[#E8EEE9]/60 z-40 shadow-[0_-8px_30px_rgba(0,0,0,0.05)]"
+        className="fixed bottom-0 left-0 right-0 w-full md:max-w-xl lg:max-w-3xl xl:max-w-4xl sm:mx-auto bg-white/70 backdrop-blur-2xl border-t border-[#E8EEE9]/60 z-40 shadow-[0_-8px_30px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]"
       >
-        <div className="flex justify-around items-center h-[60px] px-2">
+        <div className="flex justify-around items-center h-[56px] px-2">
           <NavItem icon="pie_chart" label={t("សរុប", config.language)} isActive={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
           <NavItem icon="list_alt" label={t("បញ្ជី", config.language)} isActive={activeTab === 'records'} onClick={() => setActiveTab('records')} />
           
