@@ -33,8 +33,12 @@ body {
 }
 
 .app-header {
-  padding-top: max(16px, calc(env(safe-area-inset-top) + 8px));
+  padding-top: calc(env(safe-area-inset-top) + 8px);
   padding-bottom: 12px;
+}
+
+.bottom-nav {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
 }
 
 .date-picker-wrapper,
