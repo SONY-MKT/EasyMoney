@@ -980,7 +980,7 @@ export default function App() {
             {activeTab === 'add' && <AddRecordView session={session} categories={categories} onUpdate={() => refreshData(true)} showToast={showToast} setActiveTab={setActiveTab} editRecord={editRecord} users={users} config={config} />}
             {activeTab === 'settings' && <SettingsView session={session} setActiveTab={setActiveTab} config={config} onUpdate={() => refreshData(true)} showToast={showToast} records={records} users={users} askConfirm={askConfirm} setPromptYearState={setPromptYearState} setProgressModal={setProgressModal} />}
             {activeTab === 'import' && <ImportView session={session} onUpdate={() => refreshData(true)} showToast={showToast} setActiveTab={setActiveTab} config={config} users={users} setProgressModal={setProgressModal} />}
-            {activeTab === 'export' && <ExportView records={records} users={users} showToast={showToast} setActiveTab={setActiveTab} askConfirm={askConfirm} config={config} setPromptYearState={setPromptYearState} />}
+            {activeTab === 'export' && <ExportView session={session} records={records} users={users} showToast={showToast} setActiveTab={setActiveTab} askConfirm={askConfirm} config={config} setPromptYearState={setPromptYearState} />}
             {activeTab === 'data' && <DataCenterView session={session} setActiveTab={setActiveTab} records={records} users={users} config={config} />}
             {activeTab === 'members' && <MembersView users={users} session={session} onUpdate={() => refreshData(true)} showToast={showToast} setActiveTab={setActiveTab} askConfirm={askConfirm} config={config} />}
             {activeTab === 'categories' && <CategoriesView categories={categories} onUpdate={() => refreshData(true)} showToast={showToast} setActiveTab={setActiveTab} askConfirm={askConfirm} config={config} />}
@@ -1104,7 +1104,7 @@ function DashboardView({ records, session, currency, askConfirm, config, setProm
   const [filterYear, setFilterYear] = useState(config.defaultYear || d.getFullYear());
   const [summaryMode, setSummaryMode] = useState<'year' | 'month'>('month');
 
-  const viewableRecords = useMemo(() => session.role === 'Admin' ? records : records.filter(r => r.memberId === session.id), [records, session.role, session.id]);
+  const viewableRecords = useMemo(() => (session.role === 'Admin' || config.memberViewAll) ? records : records.filter(r => r.memberId === session.id), [records, session.role, session.id, config.memberViewAll]);
   const monthRecords = useMemo(() => viewableRecords.filter(r => r.month === filterMonth && r.year === filterYear), [viewableRecords, filterMonth, filterYear]);
   const yearRecords = useMemo(() => viewableRecords.filter(r => r.year === filterYear), [viewableRecords, filterYear]);
 
@@ -1241,9 +1241,26 @@ function DashboardView({ records, session, currency, askConfirm, config, setProm
         </motion.div>
       </AnimatePresence>
 
+      {/* Spending Trend Chart */}
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="bg-white rounded-[32px] p-6 border border-[#E8EEE9] shadow-sm hover:shadow-md transition-shadow">
+        <h4 className="text-[11px] font-extrabold tracking-widest uppercase text-emerald-900 mb-6 text-center">{t("និន្នាការចំណាយ ៦ ខែចុងក្រោយ", config.language)}</h4>
+        <div className="h-[200px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={trendData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E8EEE9" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b', fontWeight: 'bold' }} dy={10} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b', fontWeight: 'bold' }} tickFormatter={(val) => Math.abs(val) > 999 ? `${(val/1000).toFixed(1)}k` : val} />
+              <ReTooltip formatter={(value: number) => formatMoney(value, currency)} contentStyle={{ borderRadius: '16px', border: '1px solid #E8EEE9', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', padding: '8px 12px', fontSize: '12px', fontWeight: 'bold', color: '#064e3b' }} />
+              <Line type="monotone" dataKey="ចំណាយ" stroke="#f43f5e" strokeWidth={3} dot={{ r: 4, fill: '#f43f5e', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
+              <Line type="monotone" dataKey="ចំណូល" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </motion.div>
+
       {/* Chart Section */}
       {chartData.length > 0 && (
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="bg-white rounded-[32px] p-6 border border-[#E8EEE9] shadow-sm hover:shadow-md transition-shadow">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} className="bg-white rounded-[32px] p-6 border border-[#E8EEE9] shadow-sm hover:shadow-md transition-shadow">
           <h4 className="text-[11px] font-extrabold tracking-widest uppercase text-emerald-900 mb-6 text-center">
             {summaryMode === 'year' ? t("តារាងចំណាយឆ្នាំនេះ", config.language) : t("តារាងចំណាយខែនេះ", config.language)}
           </h4>
@@ -1284,23 +1301,6 @@ function DashboardView({ records, session, currency, askConfirm, config, setProm
           </div>
         </motion.div>
       )}
-
-      {/* Spending Trend Chart */}
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} className="bg-white rounded-[32px] p-6 border border-[#E8EEE9] shadow-sm hover:shadow-md transition-shadow">
-        <h4 className="text-[11px] font-extrabold tracking-widest uppercase text-emerald-900 mb-6 text-center">{t("និន្នាការចំណាយ ៦ ខែចុងក្រោយ", config.language)}</h4>
-        <div className="h-[200px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={trendData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E8EEE9" />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b', fontWeight: 'bold' }} dy={10} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b', fontWeight: 'bold' }} tickFormatter={(val) => Math.abs(val) > 999 ? `${(val/1000).toFixed(1)}k` : val} />
-              <ReTooltip formatter={(value: number) => formatMoney(value, currency)} contentStyle={{ borderRadius: '16px', border: '1px solid #E8EEE9', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', padding: '8px 12px', fontSize: '12px', fontWeight: 'bold', color: '#064e3b' }} />
-              <Line type="monotone" dataKey="ចំណាយ" stroke="#f43f5e" strokeWidth={3} dot={{ r: 4, fill: '#f43f5e', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
-              <Line type="monotone" dataKey="ចំណូល" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </motion.div>
 
       {/* Summary View */}
       <motion.div 
@@ -1356,13 +1356,48 @@ function DashboardView({ records, session, currency, askConfirm, config, setProm
                   <span className="text-[10px] font-bold text-slate-400">~ <CurrencyCounter amount={getAltAmount(summaryMode === 'year' ? yExpense : mExpense)} curr={altCurrency} /></span>
                 </div>
               </div>
-              <div className="flex justify-between items-end pt-4 border-t border-[#F0F4F1] mt-2">
+              <div className="flex justify-between items-end pt-4 border-t border-[#F0F4F1] mt-2 mb-4">
                 <span className="text-xs font-extrabold text-emerald-950 mb-1">{summaryMode === 'year' ? t('ប្រាក់សល់ប្រចាំឆ្នាំ', config.language) : t('ប្រាក់សល់ខែនេះ', config.language)}</span>
                 <div className="text-right">
                   <span className={cn("text-lg font-extrabold border-b-2 border-dashed pb-0.5 block leading-tight mb-1", (summaryMode === 'year' ? yBal : mBal) >= 0 ? "text-emerald-700 border-emerald-300" : "text-red-600 border-red-300")}><CurrencyCounter amount={summaryMode === 'year' ? yBal : mBal} curr={currency} /></span>
                   <span className="text-xs font-bold text-slate-500">~ <CurrencyCounter amount={getAltAmount(summaryMode === 'year' ? yBal : mBal)} curr={altCurrency} /></span>
                 </div>
               </div>
+
+              {/* Savings Goal Tracker */}
+              {(config.monthlySavingsGoal || 0) > 0 && (
+                <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100/50 mt-4 animate-in fade-in slide-in-from-bottom-2">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-[10px] font-extrabold text-emerald-800 uppercase tracking-widest">
+                      {summaryMode === 'year' ? t('គោលដៅសន្សំប្រចាំឆ្នាំ', config.language) : t('គោលដៅសន្សំខែនេះ', config.language)}
+                    </span>
+                    <span className="text-xs font-bold text-emerald-600 border-b border-emerald-200 border-dashed pb-0.5">
+                      <CurrencyCounter amount={summaryMode === 'year' ? config.monthlySavingsGoal! * 12 : config.monthlySavingsGoal!} curr={currency} />
+                    </span>
+                  </div>
+                  
+                  <div className="h-2.5 w-full bg-slate-200/60 rounded-full overflow-hidden shadow-inner mb-2 relative">
+                    <motion.div 
+                      key={`progress-${summaryMode}`}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(100, Math.max(0, ((summaryMode === 'year' ? yBal : mBal) / (summaryMode === 'year' ? (config.monthlySavingsGoal! * 12) : config.monthlySavingsGoal!)) * 100))}%` }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
+                      className={cn("h-full rounded-full transition-all duration-300", (summaryMode === 'year' ? yBal : mBal) >= (summaryMode === 'year' ? config.monthlySavingsGoal! * 12 : config.monthlySavingsGoal!) ? "bg-emerald-500" : "bg-teal-400")}
+                    />
+                  </div>
+                  
+                  <div className="flex justify-between items-center text-[10px] font-bold">
+                    <span className="text-slate-500">
+                      {(summaryMode === 'year' ? yBal : mBal) >= (summaryMode === 'year' ? config.monthlySavingsGoal! * 12 : config.monthlySavingsGoal!)
+                        ? t('អបអរសាទរ! សម្រេចគោលដៅ!', config.language) 
+                        : ((summaryMode === 'year' ? yBal : mBal) > 0 ? t('កំពុងដំណើរការ...', config.language) : t('មិនទាន់មានប្រាក់សន្សំទេ', config.language))}
+                    </span>
+                    <span className={cn((summaryMode === 'year' ? yBal : mBal) >= (summaryMode === 'year' ? config.monthlySavingsGoal! * 12 : config.monthlySavingsGoal!) ? "text-emerald-600" : "text-emerald-500")}>
+                      {Math.max(0, Math.floor(((summaryMode === 'year' ? yBal : mBal) / (summaryMode === 'year' ? (config.monthlySavingsGoal! * 12) : config.monthlySavingsGoal!)) * 100))}%
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Optional Monthly Breakdown List for Year View */}
               {summaryMode === 'year' && (
@@ -1686,7 +1721,7 @@ function RecordsView({ records, session, currency, onUpdate, showToast, users, o
   const [filterMember, setFilterMember] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const viewableRecords = useMemo(() => session.role === 'Admin' ? records : records.filter((r:any) => r.memberId === session.id), [records, session.role, session.id]);
+  const viewableRecords = useMemo(() => (session.role === 'Admin' || config.memberViewAll) ? records : records.filter((r:any) => r.memberId === session.id), [records, session.role, session.id, config.memberViewAll]);
   
   const filtered = useMemo(() => viewableRecords
     .filter((r:any) => filterType === 'all' || r.type === filterType)
@@ -1956,6 +1991,36 @@ function SettingsView({ session, setActiveTab, config, onUpdate, showToast, reco
   const [testingSheet, setTestingSheet] = useState(false);
   const [syncingSheet, setSyncingSheet] = useState(false);
   const [offlineQueueCount, setOfflineQueueCount] = useState(getOfflineQueue().length);
+  
+  const [profileName, setProfileName] = useState(session?.name || '');
+  const [profilePin, setProfilePin] = useState(session?.pin || '');
+
+  const handleUpdateProfile = async () => {
+    if (!profileName.trim() || !profilePin.trim()) {
+      showToast(config.language === 'English' ? 'Please enter a valid name and PIN' : 'សូមបញ្ចូលឈ្មោះ និងលេខសម្ងាត់ឲ្យបានត្រឹមត្រូវ');
+      return;
+    }
+    const updatedUsers = users.map((u: any) => u.id === session.id ? { ...u, name: profileName, pin: profilePin } : u);
+    const m = await import('./store');
+    m.saveUsers(updatedUsers);
+    m.saveSession({ ...session, name: profileName, pin: profilePin });
+    onUpdate();
+
+    const syncMode = getSyncMode();
+    const apiUrl = getSyncUrl();
+    if ((syncMode === 'sync' || syncMode === 'hybrid') && apiUrl) {
+      showToast(config.language === 'English' ? 'Updating your profile locally and to Google Sheets...' : 'កំពុងរក្សាទុកក្នុងម៉ាស៊ីន និងអាប់ដេតទៅ Google Sheet...', 'sync');
+      const { syncUsersToGoogleSheet } = await import('./googleSheetSync');
+      const ok = await syncUsersToGoogleSheet(updatedUsers);
+      if (ok) {
+        showToast(config.language === 'English' ? 'Profile updated successfully!' : 'បានធ្វើបច្ចុប្បន្នភាពអាខោនរបស់អ្នករួចរាល់!', 'success');
+      } else {
+        showToast(config.language === 'English' ? 'Saved locally but failed to sync to Google Sheets!' : 'រក្សាទុកក្នុងម៉ាស៊ីន ប៉ុន្តែបច្ចុប្បន្នភាពទៅ Google Sheet បរាជ័យ!', 'warning');
+      }
+    } else {
+      showToast(config.language === 'English' ? 'Profile updated successfully!' : 'បានធ្វើបច្ចុប្បន្នភាពអាខោនរបស់អ្នករួចរាល់!', 'success');
+    }
+  };
 
   const handleUpdateConfig = async (key: keyof AppConfig, value: any) => {
     const freshConfig = { ...config, [key]: value };
@@ -2191,23 +2256,41 @@ function SettingsView({ session, setActiveTab, config, onUpdate, showToast, reco
     setOpenSection(openSection === id ? null : id);
   };
 
-  const isLocked = config.adminSettingsLock && session.role !== 'Admin';
-
-  if (isLocked) {
-    return (
-      <div className="p-6 text-center max-w-sm mx-auto space-y-6 pt-16 animate-in fade-in">
-        <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto shadow-md">
-          <Lock className="w-10 h-10" />
-        </div>
-        <h3 className="text-emerald-950 font-extrabold text-base">ទំព័រនេះត្រូវបានចាក់សោរ</h3>
-        <p className="text-xs text-slate-500 font-bold leading-relaxed">មុខងារគ្រប់គ្រងត្រូវបានចាក់សោរសម្រាប់តែសមាជិកដែលមានតួនាទីជា Admin តែប៉ុណ្ណោះ។ សូមទាក់ទងអ្នកគ្រប់គ្រងដើម្បីបើកសិទ្ធិ។</p>
-        <button onClick={() => setActiveTab('dashboard')} className="w-full bg-slate-900 text-white font-bold py-3.5 rounded-[20px] text-xs transition active:scale-95 shadow-md">ត្រឡប់ទៅការិយាល័យ</button>
-      </div>
-    );
-  }
-
   return (
     <div className="p-6 space-y-6 animate-in fade-in slide-in-from-right-8 pb-36 md:pb-28">
+      {/* Profile Settings (Always visible) */}
+      <div className={cn("bg-white rounded-[24px] border border-[#E8EEE9] shadow-sm transition-all", openSection === 'PROFILE' ? "relative z-[30]" : "relative z-[10]")}>
+        <div onClick={() => toggleSection('PROFILE')} className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-white text-emerald-600 border border-[#E8EEE9] shadow-sm flex items-center justify-center"><span className="material-symbols-rounded text-[18px]">person</span></div>
+            <span className="font-extrabold text-sm text-slate-800 uppercase tracking-wider">
+              {config.language === 'English' ? "My Profile" : "អាខោនរបស់ខ្ញុំ"}
+            </span>
+          </div>
+          <span className={cn("material-symbols-rounded text-[18px] text-slate-400 transition-transform", openSection === 'PROFILE' && "rotate-90")}>chevron_right</span>
+        </div>
+        
+        {openSection === 'PROFILE' && (
+          <div className="p-5 border-t border-[#F0F4F1] space-y-4 bg-slate-50/25">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] uppercase font-bold text-slate-500 mb-1.5 block">
+                  {config.language === 'English' ? "Display Name" : "ឈ្មោះបង្ហាញ"}
+                </label>
+                <input type="text" value={profileName} onChange={(e) => setProfileName(e.target.value)} className="w-full bg-white border border-[#E8EEE9] p-3 rounded-xl text-xs font-bold text-emerald-950 outline-none" placeholder="Name" />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase font-bold text-slate-500 mb-1.5 block">
+                  {config.language === 'English' ? "PIN Password" : "លេខសម្ងាត់ PIN"}
+                </label>
+                <input type="password" value={profilePin} onChange={(e) => setProfilePin(e.target.value)} className="w-full bg-white border border-[#E8EEE9] p-3 rounded-xl text-xs font-bold text-emerald-950 outline-none tracking-widest" placeholder="****" maxLength={4} />
+              </div>
+            </div>
+            <button onClick={handleUpdateProfile} className="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-3 rounded-xl text-xs transition shadow-md">{config.language === 'English' ? "Save Profile Changes" : "រក្សាទុកការផ្លាស់ប្តូរ"}</button>
+          </div>
+        )}
+      </div>
+
       {/* Grid of Admin shortcuts */}
       {session.role === 'Admin' && (
         <div className="grid grid-cols-2 gap-3 mb-2 font-sans">
@@ -2263,106 +2346,148 @@ function SettingsView({ session, setActiveTab, config, onUpdate, showToast, reco
                 />
               </div>
 
-              {/* App Name */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-slate-500 mb-1.5 block">
-                    {config.language === 'English' ? "App Name" : "ឈ្មោះកម្មវិធី"}
-                  </label>
-                  <input type="text" value={config.appName || 'EasyMoney'} onChange={(e) => handleUpdateConfig('appName', e.target.value)} className="w-full bg-white border border-[#E8EEE9] p-3 rounded-xl text-xs font-bold text-emerald-950 outline-none" placeholder="EasyMoney" />
-                </div>
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-slate-500 mb-1.5 block">
-                    {config.language === 'English' ? "App Logo URL" : "រូបសញ្ញា Logo"}
-                  </label>
-                  <input type="text" value={config.appLogoUrl || ''} onChange={(e) => handleUpdateConfig('appLogoUrl', e.target.value)} className="w-full bg-white border border-[#E8EEE9] p-3 rounded-xl text-xs font-bold text-emerald-950 outline-none" placeholder="https://..." />
-                </div>
-              </div>
+              {session.role === 'Admin' && (
+                <>
+                  {/* App Name */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-slate-500 mb-1.5 block">
+                        {config.language === 'English' ? "App Name" : "ឈ្មោះកម្មវិធី"}
+                      </label>
+                      <input type="text" value={config.appName || 'EasyMoney'} onChange={(e) => handleUpdateConfig('appName', e.target.value)} className="w-full bg-white border border-[#E8EEE9] p-3 rounded-xl text-xs font-bold text-emerald-950 outline-none" placeholder="EasyMoney" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-slate-500 mb-1.5 block">
+                        {config.language === 'English' ? "App Logo URL" : "រូបសញ្ញា Logo"}
+                      </label>
+                      <input type="text" value={config.appLogoUrl || ''} onChange={(e) => handleUpdateConfig('appLogoUrl', e.target.value)} className="w-full bg-white border border-[#E8EEE9] p-3 rounded-xl text-xs font-bold text-emerald-950 outline-none" placeholder="https://..." />
+                    </div>
+                  </div>
 
-              {/* Currency Selector */}
+                  {/* Currency Selector */}
+                  <div>
+                    <label className="text-[10px] uppercase font-bold text-slate-500 mb-1.5 block">
+                      {config.language === 'English' ? "Default Currency" : "រូបិយប័ណ្ណបង្ហាញជាចម្បង"}
+                    </label>
+                    <div className="flex bg-[#F5F7F5] p-1 rounded-xl">
+                      <button type="button" onClick={() => handleUpdateConfig('currency', '៛')} className={cn("flex-1 text-center py-2.5 rounded-lg font-bold text-xs", config.currency === '៛' ? "bg-white text-emerald-600 shadow-sm" : "text-slate-550")}>៛ Khmer Riel</button>
+                      <button type="button" onClick={() => handleUpdateConfig('currency', '$')} className={cn("flex-1 text-center py-2.5 rounded-lg font-bold text-xs", config.currency === '$' ? "bg-white text-emerald-600 shadow-sm" : "text-slate-550")}>$ US Dollar</button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] uppercase font-bold text-slate-500 mb-1.5 block">
+                      {config.language === 'English' ? "Exchange Rate (1 USD = ? KHR)" : "អត្រាប្តូរប្រាក់ (១ ដុល្លារ = ?)"}
+                    </label>
+                    <input 
+                      type="number" 
+                      value={config.exchangeRate || 4000} 
+                      onChange={(e) => handleUpdateConfig('exchangeRate', Number(e.target.value))}
+                      className="w-full p-3 rounded-xl border border-[#E8EEE9] bg-white font-bold text-xs text-emerald-950 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10 outline-none"
+                    />
+                  </div>
+
+                  {/* Calendar Defaults */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-slate-500 mb-1.5 block">
+                        {config.language === 'English' ? "Default Month" : "ខែលំនាំដើម"}
+                      </label>
+                      <CustomSelect 
+                        value={config.defaultMonth || 1} 
+                        onChange={(v: number) => handleUpdateConfig('defaultMonth', v)}
+                        className="p-3 rounded-xl text-xs font-bold shadow-none"
+                        modalTitle={config.language === 'English' ? "Month" : "ខែ"}
+                        options={[1,2,3,4,5,6,7,8,9,10,11,12].map(m => ({ value: m, label: config.language === 'English' ? ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][m - 1] : KHMER_MONTHS[m - 1] }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-slate-500 mb-1.5 block">
+                        {config.language === 'English' ? "Default Year" : "ឆ្នាំលំនាំដើម"}
+                      </label>
+                      <CustomSelect 
+                        value={config.defaultYear || 2026} 
+                        onChange={(v: any) => { if (v === 'ADD_NEW_YEAR') setPromptYearState(true); else handleUpdateConfig('defaultYear', v); }}
+                        className="p-3 rounded-xl text-xs font-bold shadow-none"
+                        modalTitle={config.language === 'English' ? "Year" : "ឆ្នាំ"}
+                        options={[...generateYearOptions(records, config.customYears).map(opt => ({ ...opt, label: t(opt.label, config.language) })), { value: 'ADD_NEW_YEAR', label: config.language === 'English' ? '+ Add New Year' : '+ បន្ថែមឆ្នាំថ្មី' }]}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Formats */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-slate-500 mb-1.5 block">
+                        {config.language === 'English' ? "Date Format" : "ទម្រង់កាលបរិច្ឆេទ"}
+                      </label>
+                      <CustomSelect 
+                        value={config.dateFormat || 'YYYY-MM-DD'} 
+                        onChange={(v: string) => handleUpdateConfig('dateFormat', v)}
+                        className="p-3 rounded-xl text-xs font-bold shadow-none"
+                        modalTitle={config.language === 'English' ? "Date Format" : "ទម្រង់កាលបរិច្ឆេទ"}
+                        options={[
+                          { value: 'YYYY-MM-DD', label: 'YYYY-MM-DD' },
+                          { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY' },
+                          { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY' }
+                        ]}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-slate-500 mb-1.5 block">
+                        {config.language === 'English' ? "Number Format" : "ទម្រង់លេខសំគាល់"}
+                      </label>
+                      <CustomSelect 
+                        value={config.numberFormat || 'Comma'} 
+                        onChange={(v: string) => handleUpdateConfig('numberFormat', v)}
+                        className="p-3 rounded-xl text-xs font-bold shadow-none"
+                        modalTitle="ទ្រង់ទ្រាយលេខ"
+                        options={[
+                          { value: 'Comma', label: '1,000,000' },
+                          { value: 'Plain', label: '1000000' }
+                        ]}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {session.role === 'Admin' && (
+        <>
+        {/* Financial Settings */}
+        <div className={cn("bg-white rounded-[24px] border border-[#E8EEE9] shadow-sm transition-all", openSection === 'FIN' ? "relative z-[30]" : "relative z-[10]")}>
+          <div onClick={() => toggleSection('FIN')} className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-white text-emerald-600 border border-[#E8EEE9] shadow-sm flex items-center justify-center"><span className="material-symbols-rounded text-[18px]">savings</span></div>
+              <span className="font-extrabold text-sm text-slate-800 uppercase tracking-wider">
+                {config.language === 'English' ? "Financial Settings" : "ការកំណត់ហិរញ្ញវត្ថុ"}
+              </span>
+            </div>
+            <span className={cn("material-symbols-rounded text-[18px] text-slate-400 transition-transform", openSection === 'FIN' && "rotate-90")}>chevron_right</span>
+          </div>
+          
+          {openSection === 'FIN' && (
+            <div className="p-5 border-t border-[#F0F4F1] space-y-4 bg-slate-50/25">
               <div>
                 <label className="text-[10px] uppercase font-bold text-slate-500 mb-1.5 block">
-                  {config.language === 'English' ? "Default Currency" : "រូបិយប័ណ្ណបង្ហាញជាចម្បង"}
+                  {config.language === 'English' ? "Monthly Savings Goal" : "គោលដៅសន្សំប្រចាំខែ"}
                 </label>
-                <div className="flex bg-[#F5F7F5] p-1 rounded-xl">
-                  <button type="button" onClick={() => handleUpdateConfig('currency', '៛')} className={cn("flex-1 text-center py-2.5 rounded-lg font-bold text-xs", config.currency === '៛' ? "bg-white text-emerald-600 shadow-sm" : "text-slate-550")}>៛ Khmer Riel</button>
-                  <button type="button" onClick={() => handleUpdateConfig('currency', '$')} className={cn("flex-1 text-center py-2.5 rounded-lg font-bold text-xs", config.currency === '$' ? "bg-white text-emerald-600 shadow-sm" : "text-slate-550")}>$ US Dollar</button>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] uppercase font-bold text-slate-500 mb-1.5 block">
-                  {config.language === 'English' ? "Exchange Rate (1 USD = ? KHR)" : "អត្រាប្តូរប្រាក់ (១ ដុល្លារ = ?)"}
-                </label>
-                <input 
-                  type="number" 
-                  value={config.exchangeRate || 4000} 
-                  onChange={(e) => handleUpdateConfig('exchangeRate', Number(e.target.value))}
-                  className="w-full p-3 rounded-xl border border-[#E8EEE9] bg-white font-bold text-xs text-emerald-950 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10 outline-none"
-                />
-              </div>
-
-              {/* Calendar Defaults */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-slate-500 mb-1.5 block">
-                    {config.language === 'English' ? "Default Month" : "ខែលំនាំដើម"}
-                  </label>
-                  <CustomSelect 
-                    value={config.defaultMonth || 1} 
-                    onChange={(v: number) => handleUpdateConfig('defaultMonth', v)}
-                    className="p-3 rounded-xl text-xs font-bold shadow-none"
-                    modalTitle={config.language === 'English' ? "Month" : "ខែ"}
-                    options={[1,2,3,4,5,6,7,8,9,10,11,12].map(m => ({ value: m, label: config.language === 'English' ? ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][m - 1] : KHMER_MONTHS[m - 1] }))}
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">{config.currency}</span>
+                  <input 
+                    type="number" 
+                    value={config.monthlySavingsGoal || 0} 
+                    onChange={(e) => handleUpdateConfig('monthlySavingsGoal', Number(e.target.value))}
+                    className="w-full pl-8 pr-3 py-3 rounded-xl border border-[#E8EEE9] bg-white font-bold text-xs text-emerald-950 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10 outline-none"
+                    placeholder="0"
                   />
                 </div>
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-slate-500 mb-1.5 block">
-                    {config.language === 'English' ? "Default Year" : "ឆ្នាំលំនាំដើម"}
-                  </label>
-                  <CustomSelect 
-                    value={config.defaultYear || 2026} 
-                    onChange={(v: any) => { if (v === 'ADD_NEW_YEAR') setPromptYearState(true); else handleUpdateConfig('defaultYear', v); }}
-                    className="p-3 rounded-xl text-xs font-bold shadow-none"
-                    modalTitle={config.language === 'English' ? "Year" : "ឆ្នាំ"}
-                    options={[...generateYearOptions(records, config.customYears).map(opt => ({ ...opt, label: t(opt.label, config.language) })), { value: 'ADD_NEW_YEAR', label: config.language === 'English' ? '+ Add New Year' : '+ បន្ថែមឆ្នាំថ្មី' }]}
-                  />
-                </div>
-              </div>
-
-              {/* Formats */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-slate-500 mb-1.5 block">
-                    {config.language === 'English' ? "Date Format" : "ទម្រង់កាលបរិច្ឆេទ"}
-                  </label>
-                  <CustomSelect 
-                    value={config.dateFormat || 'YYYY-MM-DD'} 
-                    onChange={(v: string) => handleUpdateConfig('dateFormat', v)}
-                    className="p-3 rounded-xl text-xs font-bold shadow-none"
-                    modalTitle={config.language === 'English' ? "Date Format" : "ទម្រង់កាលបរិច្ឆេទ"}
-                    options={[
-                      { value: 'YYYY-MM-DD', label: 'YYYY-MM-DD' },
-                      { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY' },
-                      { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY' }
-                    ]}
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-slate-500 mb-1.5 block">
-                    {config.language === 'English' ? "Number Format" : "ទម្រង់លេខសំគាល់"}
-                  </label>
-                  <CustomSelect 
-                    value={config.numberFormat || 'Comma'} 
-                    onChange={(v: string) => handleUpdateConfig('numberFormat', v)}
-                    className="p-3 rounded-xl text-xs font-bold shadow-none"
-                    modalTitle="ទ្រង់ទ្រាយលេខ"
-                    options={[
-                      { value: 'Comma', label: '1,000,000' },
-                      { value: 'Plain', label: '1000000' }
-                    ]}
-                  />
-                </div>
+                <p className="text-[10px] font-bold text-slate-400 mt-2">
+                  {config.language === 'English' ? "Set your monthly savings target to track your progress" : "កំណត់ចំនួនប្រាក់សន្សំគោលដៅប្រចាំខែដើម្បីតាមដានវឌ្ឍនភាពរបស់អ្នក"}
+                </p>
               </div>
             </div>
           )}
@@ -2912,7 +3037,8 @@ function SettingsView({ session, setActiveTab, config, onUpdate, showToast, reco
             </div>
           )}
         </div>
-
+        </>
+      )}
       </div>
     </div>
   );
@@ -3683,19 +3809,21 @@ function DataCenterView({ session, setActiveTab, records = [], users = [], confi
   );
 }
 
-function ExportView({ records, users, showToast, setActiveTab, config, setPromptYearState }: any) {
+function ExportView({ session, records, users, showToast, setActiveTab, config, setPromptYearState }: any) {
   const [eMonth, setEMonth] = useState(new Date().getMonth() + 1);
   const [eYear, setEYear] = useState(config.defaultYear || new Date().getFullYear());
   const [exportFormat, setExportFormat] = useState<'XLSX' | 'CSV'>('XLSX');
 
+  const viewableRecords = useMemo(() => (session.role === 'Admin' || config.memberViewAll) ? records : records.filter((r:any) => r.memberId === session.id), [records, session.role, session.id, config.memberViewAll]);
+
   const handleExportData = (mode: 'all' | 'month' | 'year') => {
-    let filtered = records;
+    let filtered = viewableRecords;
     let title = 'All';
     if (mode === 'month') {
-      filtered = records.filter((r: any) => r.month === eMonth && r.year === eYear);
+      filtered = viewableRecords.filter((r: any) => r.month === eMonth && r.year === eYear);
       title = `${eYear}_${eMonth}`;
     } else if (mode === 'year') {
-      filtered = records.filter((r: any) => r.year === eYear);
+      filtered = viewableRecords.filter((r: any) => r.year === eYear);
       title = `${eYear}`;
     }
 

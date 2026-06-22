@@ -63,6 +63,9 @@ export interface AppConfig {
   compactMode?: boolean;
   showShadows?: boolean;
 
+  // Financial Settings
+  monthlySavingsGoal?: number;
+
   // User Permission Settings
   memberViewAll?: boolean;
   memberEditOwn?: boolean;
