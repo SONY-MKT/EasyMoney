@@ -33,6 +33,7 @@ export interface Category {
   id: string;
   type: RecordType;
   name: string;
+  nameEn?: string;
 }
 
 export interface AppConfig {

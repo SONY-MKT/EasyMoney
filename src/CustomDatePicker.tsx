@@ -135,7 +135,8 @@ export default function CustomDatePicker({
   const daysInSelMonth = daysInMonth(mYear, mMonth - 1);
   const daysForWheel = Array.from({ length: daysInSelMonth }, (_, i) => i + 1).map(d => ({ label: d.toString().padStart(2, '0'), value: d }));
 
-  const handleMobileConfirm = () => {
+  const handleMobileConfirm = (e: React.MouseEvent) => {
+      e.preventDefault();
       const d = mDay > daysInSelMonth ? daysInSelMonth : mDay;
       const dStr = `${mYear}-${String(mMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       onChange(dStr);
@@ -164,13 +165,13 @@ export default function CustomDatePicker({
       <AnimatePresence>
         {isOpen && (
             <div className={`fixed inset-0 z-[200] flex ${isMobile ? 'items-end' : 'items-center justify-center p-4'} font-sans`}>
-              <motion.div 
+                  <motion.div 
                  initial={{ opacity: 0 }}
                  animate={{ opacity: 1 }}
                  exit={{ opacity: 0 }}
                  transition={{ duration: 0.2 }}
                  className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
-                 onClick={() => setIsOpen(false)}
+                 onClick={(e) => { e.preventDefault(); setIsOpen(false); }}
               />
               <motion.div 
                  initial={{ y: isMobile ? '100%' : 10, scale: isMobile ? 1 : 0.95, opacity: 0 }}
@@ -189,10 +190,10 @@ export default function CustomDatePicker({
                      </div>
 
                      <div className="w-full grid grid-cols-2 gap-4">
-                        <button onClick={() => setIsOpen(false)} className="py-4 rounded-2xl font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 active:scale-95 transition-all text-sm">
+                        <button type="button" onClick={(e) => { e.preventDefault(); setIsOpen(false); }} className="py-4 rounded-2xl font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 active:scale-95 transition-all text-sm">
                            {language === 'English' ? 'Cancel' : 'បោះបង់'}
                         </button>
-                        <button onClick={handleMobileConfirm} className="py-4 rounded-2xl font-bold bg-emerald-500 text-white hover:bg-emerald-600 active:scale-95 transition-all shadow-md shadow-emerald-500/20 text-sm">
+                        <button type="button" onClick={handleMobileConfirm} className="py-4 rounded-2xl font-bold bg-emerald-500 text-white hover:bg-emerald-600 active:scale-95 transition-all shadow-md shadow-emerald-500/20 text-sm">
                            {language === 'English' ? 'Select Date' : 'ជ្រើសរើស'}
                         </button>
                      </div>

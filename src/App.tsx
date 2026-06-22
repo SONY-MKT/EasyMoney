@@ -309,6 +309,11 @@ const CATEGORY_TRANSLATIONS: Record<string, string> = {
 
 const translateCategory = (name: string, language: string = 'Khmer'): string => {
   if (language === 'English') {
+    const cats = getCategories();
+    const found = cats.find((c: any) => c.name === name);
+    if (found && found.nameEn) {
+       return found.nameEn;
+    }
     return CATEGORY_TRANSLATIONS[name] || name;
   }
   return name;
@@ -1152,7 +1157,15 @@ function DashboardView({ records, session, currency, askConfirm, config, setProm
     return acc;
   }, {} as Record<string, number>), [currentRecordsForChart, getAmt, currency]);
   
-  const chartData = useMemo(() => Object.keys(expByCategory).map((k, i) => ({ name: translateCategory(k, config.language), value: expByCategory[k], fill: ['#059669', '#10b981', '#34d399', '#6ee7b7', '#f43f5e', '#fb923c', '#eab308', '#6366f1'][i % 8] })), [expByCategory, config.language]);
+  const chartData = useMemo(() => {
+    return Object.keys(expByCategory)
+      .sort((a,b) => expByCategory[b] - expByCategory[a])
+      .map((k, i) => ({ 
+        name: translateCategory(k, config.language), 
+        value: expByCategory[k], 
+        fill: ['#10b981', '#34d399', '#059669', '#3b82f6', '#6366f1', '#a855f7', '#ec4899', '#f43f5e', '#fb923c', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#0ea5e9'][i % 16] 
+      }));
+  }, [expByCategory, config.language]);
 
   const trendData = useMemo(() => Array.from({ length: 6 }).map((_, i) => {
     const td = new Date(filterYear, filterMonth - 1 - i, 1);
@@ -1234,7 +1247,7 @@ function DashboardView({ records, session, currency, askConfirm, config, setProm
           <h4 className="text-[11px] font-extrabold tracking-widest uppercase text-emerald-900 mb-6 text-center">
             {summaryMode === 'year' ? t("តារាងចំណាយឆ្នាំនេះ", config.language) : t("តារាងចំណាយខែនេះ", config.language)}
           </h4>
-          <div className="h-[200px]">
+          <div className="h-[200px] mb-6">
             <ResponsiveContainer width="100%" height="100%">
               <RePieChart>
                 <Pie data={chartData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3} dataKey="value" stroke="none" cornerRadius={6}>
@@ -1243,6 +1256,31 @@ function DashboardView({ records, session, currency, askConfirm, config, setProm
                 <ReTooltip formatter={(value: number) => formatMoney(value, currency)} contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)', padding: '12px 16px', fontWeight: 'bold', fontSize: '14px', color: '#064e3b' }} itemStyle={{ color: '#064e3b' }} />
               </RePieChart>
             </ResponsiveContainer>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-2 mt-4">
+            <div className="flex flex-col gap-2">
+              {chartData.slice(0, Math.ceil(chartData.length / 2)).map((entry, index) => (
+                <div key={`left-${index}`} className="flex items-center justify-between bg-[#F8FAFC] px-3 py-2.5 rounded-2xl border border-slate-100/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all hover:scale-[1.02] cursor-default">
+                  <div className="flex items-center gap-2 min-w-0 pr-2">
+                    <div className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: entry.fill }} />
+                    <span className="text-[11px] font-bold text-slate-500 truncate" title={entry.name}>{entry.name}</span>
+                  </div>
+                  <span className="text-[11px] font-black text-slate-800 shrink-0">{formatMoney(entry.value, currency)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-col gap-2">
+              {chartData.slice(Math.ceil(chartData.length / 2)).map((entry, index) => (
+                <div key={`right-${index}`} className="flex items-center justify-between bg-[#F8FAFC] px-3 py-2.5 rounded-2xl border border-slate-100/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all hover:scale-[1.02] cursor-default">
+                  <div className="flex items-center gap-2 min-w-0 pr-2">
+                    <div className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: entry.fill }} />
+                    <span className="text-[11px] font-bold text-slate-500 truncate" title={entry.name}>{entry.name}</span>
+                  </div>
+                  <span className="text-[11px] font-black text-slate-800 shrink-0">{formatMoney(entry.value, currency)}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </motion.div>
       )}
@@ -4225,19 +4263,46 @@ function MembersView({ users, session, onUpdate, showToast, setActiveTab, askCon
 }
 function CategoriesView({ categories, onUpdate, showToast, setActiveTab, askConfirm }: any) {
   const [name, setName] = useState('');
+  const [nameEn, setNameEn] = useState('');
   const [type, setType] = useState<RecordType>('ចំណាយ');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editNameEn, setEditNameEn] = useState('');
   const userConfig = getConfig();
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if(!name) return;
     const curr = getCategories();
-    curr.push({ id: uuidv4(), name, type });
+    curr.push({ id: uuidv4(), name: name.trim(), nameEn: nameEn.trim() || undefined, type });
     saveCategories(curr);
     if (getSyncMode() !== 'local') syncCategoriesToGoogleSheet(curr);
     onUpdate();
     setName('');
+    setNameEn('');
     showToast(userConfig.language === 'English' ? 'Category added successfully' : 'បន្ថែមប្រភេទលុយបានជោគជ័យ', 'success');
+  };
+
+  const handleSaveEdit = (id: string, e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if(!editName.trim()) return;
+    const curr = getCategories();
+    const idx = curr.findIndex((c:any) => c.id === id);
+    if(idx > -1) {
+      curr[idx].name = editName.trim();
+      curr[idx].nameEn = editNameEn.trim() || undefined;
+      saveCategories(curr);
+      if (getSyncMode() !== 'local') syncCategoriesToGoogleSheet(curr);
+      onUpdate();
+      showToast(userConfig.language === 'English' ? 'Category updated successfully' : 'កែប្រែប្រភេទលុយបានជោគជ័យ', 'success');
+    }
+    setEditingId(null);
+  };
+
+  const startEdit = (c: any) => {
+    setEditingId(c.id);
+    setEditName(c.name);
+    setEditNameEn(c.nameEn || '');
   };
 
   const handleDelete = (id: string) => {
@@ -4304,29 +4369,43 @@ function CategoriesView({ categories, onUpdate, showToast, setActiveTab, askConf
 
       {/* ADD CATEGORY FORM */}
       <form id="add-category-form" onSubmit={handleAdd} className="bg-white p-4 rounded-[20px] border border-slate-100 shadow-[0_4px_25px_rgba(0,0,0,0.015)] font-sans relative transition-all duration-300">
-        <div className="flex gap-2">
-          <div className="relative flex-1 group">
-            <input 
-              id="category-name-input"
-              required 
-              placeholder={userConfig.language === 'English' ? `Add new ${type === 'ចំណូល' ? 'Income' : 'Expense'} Category...` : `បន្ថែមប្រភេទ${type}ថ្មី...`} 
-              value={name} 
-              onChange={e=>setName(e.target.value)} 
-              className="w-full bg-slate-50/60 hover:bg-white focus:bg-white border border-slate-200/60 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all pl-10 pr-4 h-11.5 rounded-xl text-xs font-semibold text-slate-800 outline-none placeholder:text-slate-400" 
-            />
-            <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors pointer-events-none" />
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-2">
+            <div className="relative flex-1 group">
+              <input 
+                id="category-name-input"
+                required 
+                placeholder={userConfig.language === 'English' ? `Name (Khmer) - ${type === 'ចំណូល' ? 'Income' : 'Expense'}...` : `ឈ្មោះជាភាសាខ្មែរ (${type})...`} 
+                value={name} 
+                onChange={e=>setName(e.target.value)} 
+                className="w-full bg-slate-50/60 hover:bg-white focus:bg-white border border-slate-200/60 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all pl-10 pr-4 h-11.5 rounded-xl text-xs font-semibold text-slate-800 outline-none placeholder:text-slate-400" 
+              />
+              <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors pointer-events-none" />
+            </div>
           </div>
-          <button 
-            id="add-category-submit"
-            type="submit" 
-            className={cn(
-              "px-5 h-11.5 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer text-white transition-all duration-350 hover:opacity-95 active:scale-[0.98] shadow-xs shrink-0 select-none",
-              type === 'ចំណូល' ? "bg-gradient-to-r from-emerald-500 to-teal-500" : "bg-gradient-to-r from-rose-500 to-red-500"
-            )}
-          >
-            <Plus className="w-4 h-4" />
-            <span>{userConfig.language === 'English' ? "Add" : "បន្ថែម"}</span>
-          </button>
+          <div className="flex gap-2">
+            <div className="relative flex-1 group">
+              <input 
+                id="category-name-en-input"
+                placeholder={userConfig.language === 'English' ? `Name (English) - Optional...` : `ឈ្មោះជាភាសាអង់គ្លេស (មិនចាំបាច់)...`} 
+                value={nameEn} 
+                onChange={e=>setNameEn(e.target.value)} 
+                className="w-full bg-slate-50/60 hover:bg-white focus:bg-white border border-slate-200/60 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all pl-10 pr-4 h-11.5 rounded-xl text-xs font-semibold text-slate-800 outline-none placeholder:text-slate-400" 
+              />
+              <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors pointer-events-none" />
+            </div>
+            <button 
+              id="add-category-submit"
+              type="submit" 
+              className={cn(
+                "px-5 h-11.5 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer text-white transition-all duration-350 hover:opacity-95 active:scale-[0.98] shadow-xs shrink-0 select-none",
+                type === 'ចំណូល' ? "bg-gradient-to-r from-emerald-500 to-teal-500" : "bg-gradient-to-r from-rose-500 to-red-500"
+              )}
+            >
+              <Plus className="w-4 h-4" />
+              <span>{userConfig.language === 'English' ? "Add" : "បន្ថែម"}</span>
+            </button>
+          </div>
         </div>
       </form>
 
@@ -4366,26 +4445,75 @@ function CategoriesView({ categories, onUpdate, showToast, setActiveTab, askConf
                             : "border-slate-100 hover:border-slate-200/60 hover:shadow-[0_4px_20px_rgba(0,0,0,0.012)] rounded-xl border shadow-xs"
                         )}
                       >
-                        <div className="flex items-center gap-3">
-                          <div {...provided.dragHandleProps} className="text-slate-300 hover:text-slate-400 cursor-grab active:cursor-grabbing p-1.5 rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center">
-                            <GripVertical className="w-3.5 h-3.5" />
-                          </div>
-                          <div className={cn(
-                            "w-2 h-2 rounded-full",
-                            type === 'ចំណូល' ? "bg-emerald-500/80" : "bg-rose-500/80"
-                          )} />
-                          <span className="text-xs font-bold text-slate-700">
-                            {translateCategory(c.name, userConfig.language)}
-                          </span>
-                        </div>
-                        <button 
-                          id={`delete-category-btn-${c.id}`}
-                          type="button" 
-                          onClick={()=>handleDelete(c.id)} 
-                          className="text-slate-400 hover:text-rose-500 transition-all p-2 bg-slate-50 hover:bg-rose-500/10 active:scale-95 rounded-lg flex items-center justify-center border border-slate-100/50 hover:border-rose-100/50 cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {editingId === c.id ? (
+                          <>
+                            <div {...provided.dragHandleProps} className="hidden" />
+                            <form onSubmit={(e) => handleSaveEdit(c.id, e)} className="flex-1 flex flex-col sm:flex-row gap-2 w-full pr-0 sm:pr-2">
+                               <input 
+                                  autoFocus
+                                required
+                                placeholder="Khmer Name"
+                                value={editName}
+                                onChange={e => setEditName(e.target.value)}
+                                className="flex-1 bg-slate-50 border border-slate-200/60 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 outline-none"
+                             />
+                             <input 
+                                placeholder="English Name"
+                                value={editNameEn}
+                                onChange={e => setEditNameEn(e.target.value)}
+                                className="flex-1 bg-slate-50 border border-slate-200/60 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 outline-none"
+                             />
+                             <div className="flex gap-1 pt-1 sm:pt-0">
+                               <button type="submit" className="p-1.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 active:scale-95 flex items-center justify-center">
+                                 <CheckCircle2 className="w-4 h-4" />
+                               </button>
+                               <button type="button" onClick={() => setEditingId(null)} className="p-1.5 bg-slate-200 text-slate-600 rounded-lg hover:bg-slate-300 active:scale-95 flex items-center justify-center">
+                                 <X className="w-4 h-4" />
+                               </button>
+                             </div>
+                          </form>
+                         </>
+                        ) : (
+                          <>
+                            <div className="flex items-center gap-3">
+                              <div {...provided.dragHandleProps} className="text-slate-300 hover:text-slate-400 cursor-grab active:cursor-grabbing p-1.5 rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center">
+                                <GripVertical className="w-3.5 h-3.5" />
+                              </div>
+                              <div className={cn(
+                                "w-2 h-2 rounded-full shrink-0",
+                                type === 'ចំណូល' ? "bg-emerald-500/80" : "bg-rose-500/80"
+                              )} />
+                              <div className="flex flex-col">
+                                <span className="text-xs font-bold text-slate-700">
+                                  {translateCategory(c.name, userConfig.language)}
+                                </span>
+                                {(c.nameEn || (userConfig.language === 'English' && c.name !== translateCategory(c.name, 'English'))) && (
+                                  <span className="text-[10px] text-slate-400 mt-0.5 font-medium">
+                                    {userConfig.language === 'English' ? c.name : (c.nameEn || translateCategory(c.name, 'English'))}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <button 
+                                id={`edit-category-btn-${c.id}`}
+                                type="button" 
+                                onClick={()=>startEdit(c)} 
+                                className="text-slate-400 hover:text-indigo-500 transition-all p-2 bg-slate-50 hover:bg-indigo-500/10 active:scale-95 rounded-lg flex items-center justify-center border border-slate-100/50 hover:border-indigo-100/50 cursor-pointer"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button 
+                                id={`delete-category-btn-${c.id}`}
+                                type="button" 
+                                onClick={()=>handleDelete(c.id)} 
+                                className="text-slate-400 hover:text-rose-500 transition-all p-2 bg-slate-50 hover:bg-rose-500/10 active:scale-95 rounded-lg flex items-center justify-center border border-slate-100/50 hover:border-rose-100/50 cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     )}
                   </Draggable>
