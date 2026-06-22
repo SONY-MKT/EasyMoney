@@ -1275,29 +1275,16 @@ function DashboardView({ records, session, currency, askConfirm, config, setProm
             </ResponsiveContainer>
           </div>
           
-          <div className="grid grid-cols-2 gap-2 mt-4">
-            <div className="flex flex-col gap-2">
-              {chartData.slice(0, Math.ceil(chartData.length / 2)).map((entry, index) => (
-                <div key={`left-${index}`} className="flex items-center justify-between bg-[#F8FAFC] px-3 py-2.5 rounded-2xl border border-slate-100/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all hover:scale-[1.02] cursor-default">
-                  <div className="flex items-center gap-2 min-w-0 pr-2">
-                    <div className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: entry.fill }} />
-                    <span className="text-[11px] font-bold text-slate-500 truncate" title={entry.name}>{entry.name}</span>
-                  </div>
-                  <span className="text-[11px] font-black text-slate-800 shrink-0">{formatMoney(entry.value, currency)}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
+            {chartData.map((entry, index) => (
+              <div key={`chart-item-${index}`} className="flex items-center justify-between bg-[#F8FAFC] px-3 py-2.5 rounded-2xl border border-slate-100/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all hover:scale-[1.02] cursor-default">
+                <div className="flex items-center gap-2 min-w-0 pr-2">
+                  <div className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: entry.fill }} />
+                  <span className="text-[11px] font-bold text-slate-500 truncate whitespace-normal sm:whitespace-nowrap" title={entry.name}>{entry.name}</span>
                 </div>
-              ))}
-            </div>
-            <div className="flex flex-col gap-2">
-              {chartData.slice(Math.ceil(chartData.length / 2)).map((entry, index) => (
-                <div key={`right-${index}`} className="flex items-center justify-between bg-[#F8FAFC] px-3 py-2.5 rounded-2xl border border-slate-100/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all hover:scale-[1.02] cursor-default">
-                  <div className="flex items-center gap-2 min-w-0 pr-2">
-                    <div className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: entry.fill }} />
-                    <span className="text-[11px] font-bold text-slate-500 truncate" title={entry.name}>{entry.name}</span>
-                  </div>
-                  <span className="text-[11px] font-black text-slate-800 shrink-0">{formatMoney(entry.value, currency)}</span>
-                </div>
-              ))}
-            </div>
+                <span className="text-[11px] font-black text-slate-800 shrink-0">{formatMoney(entry.value, currency)}</span>
+              </div>
+            ))}
           </div>
         </motion.div>
       )}
@@ -2258,59 +2245,22 @@ function SettingsView({ session, setActiveTab, config, onUpdate, showToast, reco
 
   return (
     <div className="p-6 space-y-6 animate-in fade-in slide-in-from-right-8 pb-36 md:pb-28">
-      {/* Profile Settings (Always visible) */}
-      <div className={cn("bg-white rounded-[24px] border border-[#E8EEE9] shadow-sm transition-all", openSection === 'PROFILE' ? "relative z-[30]" : "relative z-[10]")}>
-        <div onClick={() => toggleSection('PROFILE')} className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-white text-emerald-600 border border-[#E8EEE9] shadow-sm flex items-center justify-center"><span className="material-symbols-rounded text-[18px]">person</span></div>
-            <span className="font-extrabold text-sm text-slate-800 uppercase tracking-wider">
-              {config.language === 'English' ? "My Profile" : "អាខោនរបស់ខ្ញុំ"}
-            </span>
+      {/* Grid of shortcuts */}
+      <div className="grid grid-cols-2 gap-3 mb-2 font-sans">
+        <button onClick={() => setActiveTab('members')} className="bg-white hover:bg-slate-50 border border-[#E8EEE9] p-4 rounded-[24px] flex items-center gap-3 shadow-sm transition active:scale-95 text-left outline-none">
+          <div className="p-3 rounded-2xl bg-white text-emerald-600 border border-[#E8EEE9] shadow-sm flex items-center justify-center"><span className="material-symbols-rounded text-xl">group</span></div>
+          <div>
+            <p className="font-extrabold text-xs text-emerald-950">{config.language === 'English' ? "Family Accounts" : "សមាជិកគ្រួសារ"}</p>
           </div>
-          <span className={cn("material-symbols-rounded text-[18px] text-slate-400 transition-transform", openSection === 'PROFILE' && "rotate-90")}>chevron_right</span>
-        </div>
+        </button>
         
-        {openSection === 'PROFILE' && (
-          <div className="p-5 border-t border-[#F0F4F1] space-y-4 bg-slate-50/25">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[10px] uppercase font-bold text-slate-500 mb-1.5 block">
-                  {config.language === 'English' ? "Display Name" : "ឈ្មោះបង្ហាញ"}
-                </label>
-                <input type="text" value={profileName} onChange={(e) => setProfileName(e.target.value)} className="w-full bg-white border border-[#E8EEE9] p-3 rounded-xl text-xs font-bold text-emerald-950 outline-none" placeholder="Name" />
-              </div>
-              <div>
-                <label className="text-[10px] uppercase font-bold text-slate-500 mb-1.5 block">
-                  {config.language === 'English' ? "PIN Password" : "លេខសម្ងាត់ PIN"}
-                </label>
-                <input type="password" value={profilePin} onChange={(e) => setProfilePin(e.target.value)} className="w-full bg-white border border-[#E8EEE9] p-3 rounded-xl text-xs font-bold text-emerald-950 outline-none tracking-widest" placeholder="****" maxLength={4} />
-              </div>
-            </div>
-            <button onClick={handleUpdateProfile} className="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-3 rounded-xl text-xs transition shadow-md">{config.language === 'English' ? "Save Profile Changes" : "រក្សាទុកការផ្លាស់ប្តូរ"}</button>
+        <button onClick={() => setActiveTab('categories')} className="bg-white hover:bg-slate-50 border border-[#E8EEE9] p-4 rounded-[24px] flex items-center gap-3 shadow-sm transition active:scale-95 text-left outline-none">
+          <div className="p-3 rounded-2xl bg-white text-emerald-600 border border-[#E8EEE9] shadow-sm flex items-center justify-center"><span className="material-symbols-rounded text-xl">sell</span></div>
+          <div>
+            <p className="font-extrabold text-xs text-emerald-950">{config.language === 'English' ? "Category List" : "ប្រភេទចំណាយ"}</p>
           </div>
-        )}
+        </button>
       </div>
-
-      {/* Grid of Admin shortcuts */}
-      {session.role === 'Admin' && (
-        <div className="grid grid-cols-2 gap-3 mb-2 font-sans">
-          <button onClick={() => setActiveTab('members')} className="bg-white hover:bg-slate-50 border border-[#E8EEE9] p-4 rounded-[24px] flex items-center gap-3 shadow-sm transition active:scale-95 text-left outline-none">
-            <div className="p-3 rounded-2xl bg-white text-emerald-600 border border-[#E8EEE9] shadow-sm flex items-center justify-center"><span className="material-symbols-rounded text-xl">group</span></div>
-            <div>
-              <p className="font-extrabold text-xs text-emerald-950">{config.language === 'English' ? "Family Accounts" : "សមាជិកគ្រួសារ"}</p>
-              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{config.language === 'English' ? "Manage Members" : "គណនីសមាជិកគ្រួសារ"}</p>
-            </div>
-          </button>
-          
-          <button onClick={() => setActiveTab('categories')} className="bg-white hover:bg-slate-50 border border-[#E8EEE9] p-4 rounded-[24px] flex items-center gap-3 shadow-sm transition active:scale-95 text-left outline-none">
-            <div className="p-3 rounded-2xl bg-white text-emerald-600 border border-[#E8EEE9] shadow-sm flex items-center justify-center"><span className="material-symbols-rounded text-xl">sell</span></div>
-            <div>
-              <p className="font-extrabold text-xs text-emerald-950">{config.language === 'English' ? "Category List" : "ប្រភេទចំណាយ"}</p>
-              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{config.language === 'English' ? "Expense Categories" : "គណនីប្រភេទចំណាយ"}</p>
-            </div>
-          </button>
-        </div>
-      )}
 
       {/* Accordion Wrapper */}
       <div className="space-y-3.5 font-sans relative">
@@ -2449,15 +2399,138 @@ function SettingsView({ session, setActiveTab, config, onUpdate, showToast, reco
                       />
                     </div>
                   </div>
+
+                  <div className="pt-3 mt-3 border-t border-[#F0F4F1] space-y-4">
+                    <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-widest flex items-center gap-1.5">
+                      <span className="material-symbols-rounded text-sm text-emerald-600">database</span>
+                      {config.language === 'English' ? "Google Sheet Sync" : "សមកាលកម្ម Google Sheet"}
+                    </h4>
+                    
+                    {/* Mode list */}
+                    <div className="space-y-2.5">
+                      {[
+                        { 
+                          value: 'local', 
+                          title: config.language === 'English' ? '1. Local Storage Only' : '១. រក្សាទុកក្នុងម៉ាស៊ីន', 
+                          desc: config.language === 'English' ? 'Save data locally in your browser storage' : 'រក្សាទុកទិន្នន័យក្នុងម៉ាស៊ីនដោយមិនប្រើអ៊ីនធឺណិត' 
+                        },
+                        { 
+                          value: 'sync', 
+                          title: config.language === 'English' ? '2. Auto Sync to Sheets' : '២. សមកាលកម្មទៅ Sheets ចម្បង', 
+                          desc: config.language === 'English' ? 'Read and write automatically via Google Web Apps Script API' : 'សរសេរ និងអានដោយស្វ័យប្រវត្តិតាមរយៈ Google Web Apps Script API' 
+                        },
+                        { 
+                          value: 'hybrid', 
+                          title: config.language === 'English' ? '3. Hybrid Sync' : '៣. សមកាលកម្មតាមលក្ខណៈគ្រោងទុក (Hybrid)', 
+                          desc: config.language === 'English' ? 'Save locally first, then sync to cloud once connection is online' : 'រក្សាទុកក្នុងម៉ាស៊ីនរង់ចាំបញ្ជូនទៅ API ពេលឧបករណ៍មានអ៊ីនធឺណិត' 
+                        }
+                      ].map((syncItem) => {
+                        const mode = getSyncMode();
+                        return (
+                          <label key={syncItem.value} className={cn(
+                            "flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all",
+                            mode === syncItem.value ? "border-emerald-500 bg-emerald-50/15" : "border-slate-100 bg-white"
+                          )}>
+                            <input 
+                              type="radio" 
+                              value={syncItem.value} 
+                              checked={mode === syncItem.value} 
+                              onChange={() => {
+                                saveSyncMode(syncItem.value as any);
+                                onUpdate();
+                                showToast(config.language === 'English' ? "Sync mode changed successfully!" : "ប្ដូររបៀបសមកាលកម្មជោគជ័យ!", 'success');
+                              }} 
+                              className="mt-1 accent-emerald-600" 
+                            />
+                            <div>
+                              <p className="font-extrabold text-xs text-slate-800 leading-tight">{syncItem.title}</p>
+                              <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">{syncItem.desc}</p>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+
+                    {/* URL field */}
+                    {getSyncMode() !== 'local' && (
+                      <div className="space-y-3.5 pt-1">
+                        <label className="text-[10px] uppercase font-bold text-slate-500 block">Google Web App URL</label>
+                        <textarea 
+                          rows={2} 
+                          value={appsScriptUrl} 
+                          onChange={(e) => {
+                            const newUrl = e.target.value;
+                            setAppsScriptUrl(newUrl);
+                            saveSyncUrl(newUrl);
+                          }}
+                          onBlur={() => {
+                            onUpdate();
+                          }}
+                          className="w-full bg-white border border-[#E8EEE9] p-3 rounded-xl text-xs font-mono select-all outline-none" 
+                          placeholder="https://script.google.com/macros/s/.../exec" 
+                        />
+                        
+                        <div className="flex gap-2">
+                          <button type="button" onClick={handleTestSheetConnection} disabled={testingSheet} className="flex-1 bg-white border-2 border-emerald-100 text-emerald-800 text-[10px] py-2.5 rounded-xl font-bold flex items-center justify-center gap-1">
+                            <span className="material-symbols-rounded text-[14px]">wifi</span> {testingSheet ? (config.language === 'English' ? 'Testing...' : 'កំពុងសាកល្បង...') : (config.language === 'English' ? 'Test Connection' : 'តេស្តតភ្ជាប់')}
+                          </button>
+                          <button type="button" onClick={handleManualSyncNow} disabled={syncingSheet} className="flex-1 bg-slate-900 text-white text-[10px] py-2.5 rounded-xl font-extrabold flex items-center justify-center gap-1">
+                            <span className={cn("material-symbols-rounded text-[14px]", syncingSheet && "animate-spin")}>sync</span> {syncingSheet ? (config.language === 'English' ? 'Syncing...' : 'កំពុងសមកាល...') : (config.language === 'English' ? 'Sync Now' : 'សមកាលកម្មទិន្នន័យ')}
+                          </button>
+                        </div>
+
+                        <div className="flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 border-dashed pt-3 pb-1">
+                          <span>{config.language === 'English' ? `Last sync: ${getLastSyncTime()}` : `សមកាលកម្មចុងក្រោយ៖ ${getLastSyncTime()}`}</span>
+                          <span className="font-bold">{config.language === 'English' ? `Offline records: ${offlineQueueCount}` : `កំណត់ត្រារង់ចាំបញ្ជូន៖ ${offlineQueueCount}`}</span>
+                        </div>
+
+                        {/* Step-by-step Setup Guide */}
+                        <div className="bg-emerald-50/25 border border-emerald-100/60 p-4 rounded-2xl space-y-2 mt-3 text-slate-700 leading-relaxed text-[11px]">
+                          <div className="font-extrabold text-xs text-emerald-900 flex items-center gap-1.5 border-b border-emerald-100/40 pb-1.5">
+                            <span className="material-symbols-rounded text-sm">info</span>
+                            <span>
+                              {config.language === 'English' ? "How to Setup Google Sheet Sync" : "របៀបរៀបចំសមកាលកម្ម Google Sheet"}
+                            </span>
+                          </div>
+                          <ol className="list-decimal pl-4.5 space-y-1 my-0 font-medium text-slate-600">
+                            <li>
+                              {config.language === 'English' 
+                                ? "Copy the Apps Script code from /Code.gs" 
+                                : "ចម្លងកូដក្នុងឯកសារ /Code.gs"}
+                            </li>
+                            <li>
+                              {config.language === 'English' 
+                                ? "Go to Google Sheets -> Extensions -> Apps Script" 
+                                : "ទៅកាន់ Google Sheets -> Extensions -> Apps Script"}
+                            </li>
+                            <li>
+                              {config.language === 'English' 
+                                ? "Paste the code, save, then click Deploy -> New Deployment" 
+                                : "ផាសកូដដែលបានចម្លង រួចចុច Save រួចចុច Deploy -> New Deployment"}
+                            </li>
+                            <li>
+                              {config.language === 'English' 
+                                ? "Configure Execute as: 'Me', and Who has access: 'Anyone'. Click Deploy." 
+                                : "កំណត់ Execute as: 'Me' និង Who has access: 'Anyone' រួចចុច Deploy"}
+                            </li>
+                            <li>
+                              {config.language === 'English' 
+                                ? "Authorize access, copy the generated Web App URL and paste it in the field above!" 
+                                : "ផ្ដល់សិទ្ធិ (Authorize Access) រួចចម្លង Web App URL យកមកបិទភ្ជាប់ក្នុងប្រអប់ខាងលើ!"}
+                            </li>
+                          </ol>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
             </div>
           )}
         </div>
 
-        {session.role === 'Admin' && (
-        <>
         {/* Financial Settings */}
+        {session.role === 'Admin' && (
         <div className={cn("bg-white rounded-[24px] border border-[#E8EEE9] shadow-sm transition-all", openSection === 'FIN' ? "relative z-[30]" : "relative z-[10]")}>
           <div onClick={() => toggleSection('FIN')} className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors">
             <div className="flex items-center gap-3">
@@ -2492,8 +2565,10 @@ function SettingsView({ session, setActiveTab, config, onUpdate, showToast, reco
             </div>
           )}
         </div>
+        )}
 
         {/* Theme Settings */}
+        {session.role === 'Admin' && (
         <div className={cn("bg-white rounded-[24px] border border-[#E8EEE9] shadow-sm transition-all", openSection === 'B' ? "relative z-[30]" : "relative z-[10]")}>
           <div onClick={() => toggleSection('B')} className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors">
             <div className="flex items-center gap-3">
@@ -2597,8 +2672,10 @@ function SettingsView({ session, setActiveTab, config, onUpdate, showToast, reco
             </div>
           )}
         </div>
+        )}
 
         {/* Permissions Settings */}
+        {session.role === 'Admin' && (
         <div className={cn("bg-white rounded-[24px] border border-[#E8EEE9] shadow-sm transition-all", openSection === 'C' ? "relative z-[30]" : "relative z-[10]")}>
           <div onClick={() => toggleSection('C')} className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors">
             <div className="flex items-center gap-3">
@@ -2698,142 +2775,12 @@ function SettingsView({ session, setActiveTab, config, onUpdate, showToast, reco
             </div>
           )}
         </div>
+        )}
 
-        {/* Google Sheet Sync Settings */}
-        <div className={cn("bg-white rounded-[24px] border border-[#E8EEE9] shadow-sm transition-all", openSection === 'D' ? "relative z-[30]" : "relative z-[10]")}>
-          <div onClick={() => toggleSection('D')} className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-white text-emerald-600 border border-[#E8EEE9] shadow-sm flex items-center justify-center"><span className="material-symbols-rounded text-[18px]">database</span></div>
-              <span className="font-extrabold text-sm text-slate-800 uppercase tracking-wider">
-                {config.language === 'English' ? "Google Sheet Sync" : "សមកាលកម្ម Google Sheet"}
-              </span>
-            </div>
-            <span className={cn("material-symbols-rounded text-[18px] text-slate-400 transition-transform", openSection === 'D' && "rotate-90")}>chevron_right</span>
-          </div>
 
-          {openSection === 'D' && (
-            <div className="p-5 border-t border-[#F0F4F1] space-y-4 bg-slate-50/25">
-              {/* Mode list */}
-              <div className="space-y-2.5">
-                {[
-                  { 
-                    value: 'local', 
-                    title: config.language === 'English' ? '1. Local Storage Only' : '១. រក្សាទុកក្នុងម៉ាស៊ីន', 
-                    desc: config.language === 'English' ? 'Save data locally in your browser storage' : 'រក្សាទុកទិន្នន័យក្នុងម៉ាស៊ីនដោយមិនប្រើអ៊ីនធឺណិត' 
-                  },
-                  { 
-                    value: 'sync', 
-                    title: config.language === 'English' ? '2. Auto Sync to Sheets' : '២. សមកាលកម្មទៅ Sheets ចម្បង', 
-                    desc: config.language === 'English' ? 'Read and write automatically via Google Web Apps Script API' : 'សរសេរ និងអានដោយស្វ័យប្រវត្តិតាមរយៈ Google Web Apps Script API' 
-                  },
-                  { 
-                    value: 'hybrid', 
-                    title: config.language === 'English' ? '3. Hybrid Sync' : '៣. សមកាលកម្មតាមលក្ខណៈគ្រោងទុក (Hybrid)', 
-                    desc: config.language === 'English' ? 'Save locally first, then sync to cloud once connection is online' : 'រក្សាទុកក្នុងម៉ាស៊ីនរង់ចាំបញ្ជូនទៅ API ពេលឧបករណ៍មានអ៊ីនធឺណិត' 
-                  }
-                ].map((syncItem) => {
-                  const mode = getSyncMode();
-                  return (
-                    <label key={syncItem.value} className={cn(
-                      "flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all",
-                      mode === syncItem.value ? "border-emerald-500 bg-emerald-50/15" : "border-slate-100 bg-white"
-                    )}>
-                      <input 
-                        type="radio" 
-                        value={syncItem.value} 
-                        checked={mode === syncItem.value} 
-                        onChange={() => {
-                          saveSyncMode(syncItem.value as any);
-                          onUpdate();
-                          showToast(config.language === 'English' ? "Sync mode changed successfully!" : "ប្ដូររបៀបសមកាលកម្មជោគជ័យ!", 'success');
-                        }} 
-                        className="mt-1 accent-emerald-600" 
-                      />
-                      <div>
-                        <p className="font-extrabold text-xs text-slate-800 leading-tight">{syncItem.title}</p>
-                        <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">{syncItem.desc}</p>
-                      </div>
-                    </label>
-                  );
-                })}
-              </div>
-
-              {/* URL field */}
-              {getSyncMode() !== 'local' && (
-                <div className="space-y-3.5 pt-1">
-                  <label className="text-[10px] uppercase font-bold text-slate-500 block">Google Web App URL</label>
-                  <textarea 
-                    rows={2} 
-                    value={appsScriptUrl} 
-                    onChange={(e) => {
-                      const newUrl = e.target.value;
-                      setAppsScriptUrl(newUrl);
-                      saveSyncUrl(newUrl);
-                    }}
-                    onBlur={() => {
-                      onUpdate();
-                    }}
-                    className="w-full bg-white border border-[#E8EEE9] p-3 rounded-xl text-xs font-mono select-all outline-none" 
-                    placeholder="https://script.google.com/macros/s/.../exec" 
-                  />
-                  
-                  <div className="flex gap-2">
-                    <button type="button" onClick={handleTestSheetConnection} disabled={testingSheet} className="flex-1 bg-white border-2 border-emerald-100 text-emerald-800 text-[10px] py-2.5 rounded-xl font-bold flex items-center justify-center gap-1">
-                      <span className="material-symbols-rounded text-[14px]">wifi</span> {testingSheet ? (config.language === 'English' ? 'Testing...' : 'កំពុងសាកល្បង...') : (config.language === 'English' ? 'Test Connection' : 'តេស្តតភ្ជាប់')}
-                    </button>
-                    <button type="button" onClick={handleManualSyncNow} disabled={syncingSheet} className="flex-1 bg-slate-900 text-white text-[10px] py-2.5 rounded-xl font-extrabold flex items-center justify-center gap-1">
-                      <span className={cn("material-symbols-rounded text-[14px]", syncingSheet && "animate-spin")}>sync</span> {syncingSheet ? (config.language === 'English' ? 'Syncing...' : 'កំពុងសមកាល...') : (config.language === 'English' ? 'Sync Now' : 'សមកាលកម្មទិន្នន័យ')}
-                    </button>
-                  </div>
-
-                  <div className="flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 border-dashed pt-3 pb-1">
-                    <span>{config.language === 'English' ? `Last sync: ${getLastSyncTime()}` : `សមកាលកម្មចុងក្រោយ៖ ${getLastSyncTime()}`}</span>
-                    <span className="font-bold">{config.language === 'English' ? `Offline records: ${offlineQueueCount}` : `កំណត់ត្រារង់ចាំបញ្ជូន៖ ${offlineQueueCount}`}</span>
-                  </div>
-
-                  {/* Step-by-step Setup Guide */}
-                  <div className="bg-emerald-50/25 border border-emerald-100/60 p-4 rounded-2xl space-y-2 mt-3 text-slate-700 leading-relaxed text-[11px]">
-                    <div className="font-extrabold text-xs text-emerald-900 flex items-center gap-1.5 border-b border-emerald-100/40 pb-1.5">
-                      <span className="material-symbols-rounded text-sm">info</span>
-                      <span>
-                        {config.language === 'English' ? "How to Setup Google Sheet Sync" : "របៀបរៀបចំសមកាលកម្ម Google Sheet"}
-                      </span>
-                    </div>
-                    <ol className="list-decimal pl-4.5 space-y-1 my-0 font-medium text-slate-600">
-                      <li>
-                        {config.language === 'English' 
-                          ? "Copy the Apps Script code from /Code.gs" 
-                          : "ចម្លងកូដក្នុងឯកសារ /Code.gs"}
-                      </li>
-                      <li>
-                        {config.language === 'English' 
-                          ? "Go to Google Sheets -> Extensions -> Apps Script" 
-                          : "ទៅកាន់ Google Sheets -> Extensions -> Apps Script"}
-                      </li>
-                      <li>
-                        {config.language === 'English' 
-                          ? "Paste the code, save, then click Deploy -> New Deployment" 
-                          : "ផាសកូដដែលបានចម្លង រួចចុច Save រួចចុច Deploy -> New Deployment"}
-                      </li>
-                      <li>
-                        {config.language === 'English' 
-                          ? "Configure Execute as: 'Me', and Who has access: 'Anyone'. Click Deploy." 
-                          : "កំណត់ Execute as: 'Me' និង Who has access: 'Anyone' រួចចុច Deploy"}
-                      </li>
-                      <li>
-                        {config.language === 'English' 
-                          ? "Authorize access, copy the generated Web App URL and paste it in the field above!" 
-                          : "ផ្ដល់សិទ្ធិ (Authorize Access) រួចចម្លង Web App URL យកមកបិទភ្ជាប់ក្នុងប្រអប់ខាងលើ!"}
-                      </li>
-                    </ol>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
 
         {/* Import Settings */}
+        {session.role === 'Admin' && (
         <div className={cn("bg-white rounded-[24px] border border-[#E8EEE9] shadow-sm transition-all", openSection === 'E' ? "relative z-[30]" : "relative z-[10]")}>
           <div onClick={() => toggleSection('E')} className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors">
             <div className="flex items-center gap-3">
@@ -2915,8 +2862,10 @@ function SettingsView({ session, setActiveTab, config, onUpdate, showToast, reco
             </div>
           )}
         </div>
+        )}
 
         {/* Export Settings */}
+        {session.role === 'Admin' && (
         <div className={cn("bg-white rounded-[24px] border border-[#E8EEE9] shadow-sm transition-all", openSection === 'F' ? "relative z-[30]" : "relative z-[10]")}>
           <div onClick={() => toggleSection('F')} className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors">
             <div className="flex items-center gap-3">
@@ -2948,8 +2897,10 @@ function SettingsView({ session, setActiveTab, config, onUpdate, showToast, reco
             </div>
           )}
         </div>
+        )}
 
         {/* G. Data Management */}
+        {session.role === 'Admin' && (
         <div id="settings-reset-section" className={cn("bg-white rounded-[24px] border border-[#E8EEE9] shadow-sm transition-all", openSection === 'G' ? "relative z-[30]" : "relative z-[10]")}>
           <div onClick={() => toggleSection('G')} className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors">
             <div className="flex items-center gap-3">
@@ -3037,8 +2988,7 @@ function SettingsView({ session, setActiveTab, config, onUpdate, showToast, reco
             </div>
           )}
         </div>
-        </>
-      )}
+        )}
       </div>
     </div>
   );
@@ -4072,6 +4022,7 @@ function MembersView({ users, session, onUpdate, showToast, setActiveTab, askCon
       </div>
 
       {/* CREATE NEW USER */}
+      {session?.role === 'Admin' && (
       <form id="add-member-form" onSubmit={handleAdd} className="bg-white p-4.5 rounded-[24px] border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.02)] font-sans relative transition-all duration-300">
         <button 
           type="button"
@@ -4165,6 +4116,7 @@ function MembersView({ users, session, onUpdate, showToast, setActiveTab, askCon
           )}
         </AnimatePresence>
       </form>
+      )}
 
       {/* USER CARDS LIST */}
       <div id="members-list-wrapper" className="space-y-4 font-sans">
@@ -4227,22 +4179,24 @@ function MembersView({ users, session, onUpdate, showToast, setActiveTab, askCon
                 </div>
 
                 <div className="flex items-center gap-2 pt-3.5 border-t border-slate-100/80 justify-end w-full">
-                  <button 
-                    id={`edit-member-btn-${u.id}`}
-                    type="button" 
-                    onClick={() => startEditing(u)} 
-                    className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50/50 rounded-xl border border-slate-200/50 hover:border-emerald-200/50 transition duration-200 active:scale-95 flex items-center justify-center"
-                    title={config.language === 'English' ? "Edit Account" : "កែសម្រួលគណនី"}
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </button>
+                  {(session?.role === 'Admin' || u.id === session?.id) && (
+                    <button 
+                      id={`edit-member-btn-${u.id}`}
+                      type="button" 
+                      onClick={() => startEditing(u)} 
+                      className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50/50 rounded-xl border border-slate-200/50 hover:border-emerald-200/50 transition duration-200 active:scale-95 flex items-center justify-center"
+                      title={config.language === 'English' ? "Edit Account" : "កែសម្រួលគណនី"}
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
 
                   {u.id === session?.id ? (
                     <div className="flex-1 max-w-[140px] px-3.5 py-2 bg-emerald-50/70 border border-emerald-100/40 rounded-xl flex items-center justify-center gap-1.5 text-[10px] font-bold text-emerald-700 select-none">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                       {config.language === 'English' ? "Current User" : "គណនីបច្ចុប្បន្ន"}
                     </div>
-                  ) : (
+                  ) : session?.role === 'Admin' && (
                     <button 
                       id={`toggle-active-btn-${u.id}`}
                       type="button" 
@@ -4258,21 +4212,23 @@ function MembersView({ users, session, onUpdate, showToast, setActiveTab, askCon
                     </button>
                   )}
 
-                  <button 
-                    id={`delete-member-btn-${u.id}`}
-                    type="button" 
-                    onClick={() => handleDeleteUser(u.id, u.name)} 
-                    disabled={u.id === session?.id}
-                    className={cn(
-                      "p-2 rounded-xl transition border active:scale-95 flex items-center justify-center",
-                      u.id === session?.id 
-                        ? "opacity-35 cursor-not-allowed bg-slate-50 text-slate-300 border-slate-150" 
-                        : "bg-red-50 hover:bg-red-100 text-red-600 border-red-100/65 hover:border-red-200"
-                    )}
-                    title={config.language === 'English' ? "Delete Account" : "លុបគណនី"}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  {session?.role === 'Admin' && (
+                    <button 
+                      id={`delete-member-btn-${u.id}`}
+                      type="button" 
+                      onClick={() => handleDeleteUser(u.id, u.name)} 
+                      disabled={u.id === session?.id}
+                      className={cn(
+                        "p-2 rounded-xl transition border active:scale-95 flex items-center justify-center",
+                        u.id === session?.id 
+                          ? "opacity-35 cursor-not-allowed bg-slate-50 text-slate-300 border-slate-150" 
+                          : "bg-red-50 hover:bg-red-100 text-red-600 border-red-100/65 hover:border-red-200"
+                      )}
+                      title={config.language === 'English' ? "Delete Account" : "លុបគណនី"}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -4323,6 +4279,7 @@ function MembersView({ users, session, onUpdate, showToast, setActiveTab, askCon
                   />
                 </div>
 
+                {session?.role === 'Admin' && (
                 <div>
                   <label className="text-[9px] uppercase font-bold text-slate-400 mb-1 block">{config.language === 'English' ? "Access Role" : "សិទ្ធិប្រើប្រាស់ (Access Role)"}</label>
                   <CustomSelect 
@@ -4336,6 +4293,7 @@ function MembersView({ users, session, onUpdate, showToast, setActiveTab, askCon
                     ]}
                   />
                 </div>
+                )}
 
                 <div className="pt-3 border-t border-dashed border-slate-100">
                   <div className="flex justify-between items-center pb-2">
