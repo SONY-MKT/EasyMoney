@@ -14,11 +14,21 @@ export default function CustomDatePicker({
   todayYMD: string
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   
   const parts = value ? value.split('-') : [];
   const initialDate = parts.length === 3 ? new Date(parseInt(parts[0], 10), parseInt(parts[1], 10)-1, parseInt(parts[2], 10)) : new Date();
   
   const [currentMonth, setCurrentMonth] = useState(new Date(initialDate.getFullYear(), initialDate.getMonth(), 1));
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Sync current month when popup opens to show the currently selected date
   useEffect(() => {
@@ -117,19 +127,34 @@ export default function CustomDatePicker({
     <>
       <div 
         className="date-picker-container relative group w-full h-[54px] cursor-pointer outline-none bg-transparent"
-        onClick={() => setIsOpen(true)}
+        onClick={() => !isMobile && setIsOpen(true)}
       >
-        <div className={`absolute inset-0 flex items-center justify-between bg-[#FBFDFB] border-2 border-[#E8EEE9] hover:border-emerald-400 px-4 rounded-[20px] text-sm outline-none transition-all font-bold text-emerald-950 active:scale-[0.98] overflow-hidden shadow-sm ${isOpen ? 'ring-4 ring-emerald-500/10 border-emerald-500' : ''}`}>
+        <div className={`absolute inset-0 flex items-center justify-between bg-[#FBFDFB] border-2 border-[#E8EEE9] hover:border-emerald-400 px-4 rounded-[20px] text-sm outline-none transition-all font-bold text-emerald-950 active:scale-[0.98] overflow-hidden shadow-sm focus-within:ring-4 focus-within:ring-emerald-500/10 focus-within:border-emerald-500 ${isOpen && !isMobile ? 'ring-4 ring-emerald-500/10 border-emerald-500' : ''}`}>
           <div className="flex items-center gap-3 overflow-hidden">
             <Calendar className="w-5 h-5 text-slate-500 shrink-0" />
             <span className="truncate">{getDisplayDate(value)}</span>
           </div>
-          <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-300" style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+          <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-300" style={{ transform: isOpen && !isMobile ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+          
+          {isMobile && (
+            <input 
+              type="date"
+              value={value}
+              onChange={(e) => {
+                if (e.target.value) {
+                  onChange(e.target.value);
+                }
+              }}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              style={{ WebkitAppearance: 'none' }}
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
         </div>
       </div>
       
       <AnimatePresence>
-        {isOpen && (
+        {isOpen && !isMobile && (
             <div className="fixed inset-0 z-[200] flex items-center justify-center font-sans p-4">
               <motion.div 
                  initial={{ opacity: 0 }}
